@@ -1,18 +1,24 @@
 package com.devin.todo.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,13 +26,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.devin.todo.data.nowMillis
 import com.devin.todo.model.Priority
 import com.devin.todo.model.Task
 
+/**
+ * Inline modal editor rendered in the main composition (not a Dialog/Popup).
+ * A focused text field inside a Compose/Wasm Dialog layer crashes the render
+ * loop, so the form is drawn as a scrim + card overlay instead.
+ */
 @Composable
 fun TaskEditorDialog(
     existing: Task?,
@@ -38,20 +51,36 @@ fun TaskEditorDialog(
     var priority by remember { mutableStateOf(existing?.priority ?: Priority.MEDIUM) }
     var dueDate by remember { mutableStateOf(existing?.dueDate) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = { onSave(title, notes, priority, dueDate) },
-                enabled = title.isNotBlank()
-            ) { Text("Save") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
-        },
-        title = { Text(if (existing == null) "New task" else "Edit task") },
-        text = {
-            Column {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.45f))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) { onDismiss() },
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth()
+                .widthIn(max = 420.dp)
+                // consume taps so clicking the card does not dismiss via the scrim
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {}
+        ) {
+            Column(Modifier.padding(24.dp)) {
+                Text(
+                    if (existing == null) "New task" else "Edit task",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(Modifier.height(16.dp))
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -82,10 +111,7 @@ fun TaskEditorDialog(
                 Spacer(Modifier.height(16.dp))
                 Text("Due date", fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val day = 24L * 60 * 60 * 1000
                     DueChip("None", dueDate == null) { dueDate = null }
                     DueChip("Today", isSameDay(dueDate, nowMillis())) { dueDate = nowMillis() }
@@ -100,10 +126,21 @@ fun TaskEditorDialog(
                     Spacer(Modifier.height(8.dp))
                     Text("Due: ${formatDueDate(dueDate!!)}")
                 }
+                Spacer(Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("Cancel") }
+                    Spacer(Modifier.height(0.dp))
+                    TextButton(
+                        onClick = { onSave(title, notes, priority, dueDate) },
+                        enabled = title.isNotBlank()
+                    ) { Text("Save") }
+                }
             }
-        },
-        shape = RoundedCornerShape(20.dp)
-    )
+        }
+    }
 }
 
 @Composable
@@ -113,7 +150,6 @@ private fun DueChip(label: String, selected: Boolean, onClick: () -> Unit) {
         onClick = onClick,
         label = { Text(label) }
     )
-    Spacer(Modifier.width(0.dp))
 }
 
 private fun isSameDay(a: Long?, b: Long): Boolean {
