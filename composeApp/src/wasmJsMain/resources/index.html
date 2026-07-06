@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Tasks &mdash; Compose Multiplatform</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #F7F8FC;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        #app {
+            width: 100%;
+            max-width: 640px;
+            height: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
+        #loading {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4C5DF0;
+            font-size: 18px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Loading Tasks…</div>
+    <div id="app"></div>
+    <script src="composeApp.js"></script>
+</body>
+</html>
