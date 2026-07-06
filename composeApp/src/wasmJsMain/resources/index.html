@@ -14,6 +14,13 @@
             background: #F7F8FC;
             font-family: system-ui, -apple-system, sans-serif;
         }
+        #app {
+            width: 100%;
+            max-width: 640px;
+            height: 100%;
+            margin: 0 auto;
+            position: relative;
+        }
         #loading {
             position: fixed;
             inset: 0;
@@ -28,6 +35,7 @@
 </head>
 <body>
     <div id="loading">Loading Tasks…</div>
+    <div id="app"></div>
     <script src="composeApp.js"></script>
 </body>
 </html>

@@ -58,17 +58,43 @@ fun App(viewModel: TaskViewModel) {
             containerColor = MaterialTheme.colorScheme.background,
             contentWindowInsets = WindowInsets.safeDrawing,
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        editorTask = null
-                        creating = true
-                        showEditor = true
-                    },
-                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                    text = { Text("New task") }
-                )
+                if (!showEditor) {
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            editorTask = null
+                            creating = true
+                            showEditor = true
+                        },
+                        icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                        text = { Text("New task") }
+                    )
+                }
             }
         ) { padding ->
+          if (showEditor) {
+            Box(Modifier.fillMaxSize().padding(padding)) {
+                TaskEditorDialog(
+                    existing = if (creating) null else editorTask,
+                    onDismiss = { showEditor = false },
+                    onSave = { title, notes, priority, dueDate ->
+                        val current = editorTask
+                        if (creating || current == null) {
+                            viewModel.addTask(title, notes, priority, dueDate)
+                        } else {
+                            viewModel.updateTask(
+                                current.copy(
+                                    title = title.trim(),
+                                    notes = notes.trim(),
+                                    priority = priority,
+                                    dueDate = dueDate
+                                )
+                            )
+                        }
+                        showEditor = false
+                    }
+                )
+            }
+          } else {
             Box(Modifier.fillMaxSize().padding(padding)) {
                 Column(
                     modifier = Modifier
@@ -176,29 +202,7 @@ fun App(viewModel: TaskViewModel) {
                     }
                 }
             }
-
-            if (showEditor) {
-                TaskEditorDialog(
-                    existing = if (creating) null else editorTask,
-                    onDismiss = { showEditor = false },
-                    onSave = { title, notes, priority, dueDate ->
-                        val current = editorTask
-                        if (creating || current == null) {
-                            viewModel.addTask(title, notes, priority, dueDate)
-                        } else {
-                            viewModel.updateTask(
-                                current.copy(
-                                    title = title.trim(),
-                                    notes = notes.trim(),
-                                    priority = priority,
-                                    dueDate = dueDate
-                                )
-                            )
-                        }
-                        showEditor = false
-                    }
-                )
-            }
+          }
         }
     }
 }

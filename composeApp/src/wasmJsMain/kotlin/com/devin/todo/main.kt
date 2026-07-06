@@ -7,7 +7,8 @@ import kotlinx.browser.document
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     document.getElementById("loading")?.remove()
-    ComposeViewport(document.body!!) {
+    val container = document.getElementById("app") ?: document.body!!
+    ComposeViewport(container) {
         AppRoot()
     }
 }

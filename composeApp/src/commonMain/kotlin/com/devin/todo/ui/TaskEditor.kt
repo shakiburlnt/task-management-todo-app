@@ -1,8 +1,5 @@
 package com.devin.todo.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.devin.todo.data.nowMillis
@@ -36,9 +33,8 @@ import com.devin.todo.model.Priority
 import com.devin.todo.model.Task
 
 /**
- * Inline modal editor rendered in the main composition (not a Dialog/Popup).
- * A focused text field inside a Compose/Wasm Dialog layer crashes the render
- * loop, so the form is drawn as a scrim + card overlay instead.
+ * Full-screen editor rendered inline in the main composition, giving a focused
+ * mobile-style editing surface on both Android and Web.
  */
 @Composable
 fun TaskEditorDialog(
@@ -51,40 +47,29 @@ fun TaskEditorDialog(
     var priority by remember { mutableStateOf(existing?.priority ?: Priority.MEDIUM) }
     var dueDate by remember { mutableStateOf(existing?.dueDate) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.45f))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onDismiss() },
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp,
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth()
-                .widthIn(max = 420.dp)
-                // consume taps so clicking the card does not dismiss via the scrim
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {}
-        ) {
-            Column(Modifier.padding(24.dp)) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 560.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(Modifier.height(24.dp))
                 Text(
                     if (existing == null) "New task" else "Edit task",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Title") },
+                    placeholder = { Text("Title") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -92,10 +77,10 @@ fun TaskEditorDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes") },
+                    placeholder = { Text("Notes") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
                 Text("Priority", fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -108,7 +93,7 @@ fun TaskEditorDialog(
                         )
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
                 Text("Due date", fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -126,7 +111,7 @@ fun TaskEditorDialog(
                     Spacer(Modifier.height(8.dp))
                     Text("Due: ${formatDueDate(dueDate!!)}")
                 }
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(24.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -138,6 +123,7 @@ fun TaskEditorDialog(
                         enabled = title.isNotBlank()
                     ) { Text("Save") }
                 }
+                Spacer(Modifier.height(24.dp))
             }
         }
     }
